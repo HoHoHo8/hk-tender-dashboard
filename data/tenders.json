@@ -1,30 +1,92 @@
 [
   {
-    "tender_ref": "ARCH/2026/001",
-    "title": "香港科技園區新大樓建造及工程資助項目",
-    "category": "工程",
-    "org_type": "政府部門",
-    "organization_name": "建築署",
-    "publish_date": "2026-08-01",
-    "close_date": "2026-08-25",
-    "award_date": "",
-    "winner_name": "",
-    "award_amount": null,
-    "original_url": "https://www.fstb.gov.hk",
-    "status": "ACTIVE"
+    "id": "GLD-AFCD/PT/08/26",
+    "title": "[漁農自然護理署] 為各郊野公園提供流動廁所租賃及清潔服務",
+    "start": "漁農自然護理署",
+    "date": "漁農自然護理署",
+    "code": "AFCD/PT/08/26",
+    "source": "政府物流服務署",
+    "url": "https://pcms2.gld.gov.hk/iprod/#/sta00305?lang-setting=zh-HK"
   },
   {
-    "tender_ref": "HKU/HR/2026/09",
-    "title": "2026/27 年度校園清潔及保安人力外判服務",
-    "category": "人力",
-    "org_type": "學術機構",
-    "organization_name": "香港大學",
-    "publish_date": "2026-07-15",
-    "close_date": "2026-08-18",
-    "award_date": "2026-08-02",
-    "winner_name": "環球服務有限公司",
-    "award_amount": 12500000,
-    "original_url": "https://www.hku.hk",
-    "status": "AWARDED"
+    "id": "GLD-CSD/HQBP/006",
+    "title": "[懲教署] 為懲教署數據中心供應不間斷電源系統",
+    "start": "懲教署",
+    "date": "懲教署",
+    "code": "CSD/HQBP/006",
+    "source": "政府物流服務署",
+    "url": "https://pcms2.gld.gov.hk/iprod/#/sta00305?lang-setting=zh-HK"
+  },
+  {
+    "id": "GLD-HHBH2417G0012026",
+    "title": "[醫務衞生局] 為香港中醫醫院供應內窺鏡檢視系統",
+    "start": "醫務衞生局",
+    "date": "醫務衞生局",
+    "code": "HHBH2417G0012026",
+    "source": "政府物流服務署",
+    "url": "https://pcms2.gld.gov.hk/iprod/#/sta00305?lang-setting=zh-HK"
+  },
+  {
+    "id": "GLD-PSRC/PT/01/2026",
+    "title": "[香港警務處] 為警察會所及中心提供園藝保養及有關服務",
+    "start": "香港警務處",
+    "date": "香港警務處",
+    "code": "PSRC/PT/01/2026",
+    "source": "政府物流服務署",
+    "url": "https://pcms2.gld.gov.hk/iprod/#/sta00305?lang-setting=zh-HK"
+  },
+  {
+    "id": "GLD-PTCSQ00326",
+    "title": "[懲教署] 為懲教署供應單層墊床被單，合約為期24個月",
+    "start": "懲教署",
+    "date": "懲教署",
+    "code": "PTCSQ00326",
+    "source": "政府物流服務署",
+    "url": "https://pcms2.gld.gov.hk/iprod/#/sta00305?lang-setting=zh-HK"
+  },
+  {
+    "id": "GLD-CP KW RHQ/1-125/1/2 (2027-2029)",
+    "title": "[香港警務處] 為九龍城裁判法院及西九龍裁判法院提供保安服務",
+    "start": "香港警務處",
+    "date": "香港警務處",
+    "code": "CP KW RHQ/1-125/1/2 (2027-2029)",
+    "source": "政府物流服務署",
+    "url": "https://pcms2.gld.gov.hk/iprod/#/sta00305?lang-setting=zh-HK"
+  },
+  {
+    "id": "GLD-LD SMO/HQ/2026/07",
+    "title": "[地政總署] 為地政總署提供香港島，離島，九龍，及新界南航空測量及可視化三維地圖更新服務",
+    "start": "地政總署",
+    "date": "地政總署",
+    "code": "LD SMO/HQ/2026/07",
+    "source": "政府物流服務署",
+    "url": "https://pcms2.gld.gov.hk/iprod/#/sta00305?lang-setting=zh-HK"
+  },
+  {
+    "id": "GLD-DPO8566/4/29",
+    "title": "[數字政策辦公室] 招標承投為數字政策辦公室的政府雲端設施服務提供系統管理軟件維修保養服務",
+    "start": "數字政策辦公室",
+    "date": "數字政策辦公室",
+    "code": "DPO8566/4/29",
+    "source": "政府物流服務署",
+    "url": "https://pcms2.gld.gov.hk/iprod/#/sta00305?lang-setting=zh-HK"
+  },
+  {
+    "id": "GLD-FEHQ 1004/26",
+    "title": "[食物環境衞生署] 為威菲車房、葵涌車房、大埔車房、元朗車房及南昌辦事處暨車房提供潔淨服務",
+    "start": "食物環境衞生署",
+    "date": "食物環境衞生署",
+    "code": "FEHQ 1004/26",
+    "source": "政府物流服務署",
+    "url": "https://pcms2.gld.gov.hk/iprod/#/sta00305?lang-setting=zh-HK"
+  },
+  {
+    "id": "GLD-WSD/CTEC/26/002",
+    "title": "[水務署] 為水務署客戶電話諮詢中心提供支援人員的聘任和管理服務 (一般及技術諮詢組別)",
+    "start": "水務署",
+    "date": "水務署",
+    "code": "WSD/CTEC/26/002",
+    "source": "政府物流服務署",
+    "url": "https://pcms2.gld.gov.hk/iprod/#/sta00305?lang-setting=zh-HK"
   }
 ]
