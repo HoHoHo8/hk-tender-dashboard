@@ -1,0 +1,30 @@
+[
+  {
+    "tender_ref": "ARCH/2026/001",
+    "title": "香港科技園區新大樓建造及工程資助項目",
+    "category": "工程",
+    "org_type": "政府部門",
+    "organization_name": "建築署",
+    "publish_date": "2026-08-01",
+    "close_date": "2026-08-25",
+    "award_date": "",
+    "winner_name": "",
+    "award_amount": null,
+    "original_url": "https://www.fstb.gov.hk",
+    "status": "ACTIVE"
+  },
+  {
+    "tender_ref": "HKU/HR/2026/09",
+    "title": "2026/27 年度校園清潔及保安人力外判服務",
+    "category": "人力",
+    "org_type": "學術機構",
+    "organization_name": "香港大學",
+    "publish_date": "2026-07-15",
+    "close_date": "2026-08-18",
+    "award_date": "2026-08-02",
+    "winner_name": "環球服務有限公司",
+    "award_amount": 12500000,
+    "original_url": "https://www.hku.hk",
+    "status": "AWARDED"
+  }
+]
