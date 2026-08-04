@@ -1,0 +1,310 @@
+html_content = '''<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>招標項目日曆管理系統 (全年完整版)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+        .day-cell { min-height: 110px; }
+        .tender-tag {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+        .tender-tag:hover { transform: translateY(-1px); opacity: 0.9; }
+    </style>
+</head>
+<body class="bg-slate-100 h-screen flex overflow-hidden">
+
+    <!-- 👈 左側分類與過濾欄 -->
+    <aside class="w-72 bg-white border-r border-slate-200 flex flex-col justify-between flex-shrink-0 z-10 shadow-sm">
+        <div class="p-5 space-y-6 overflow-y-auto">
+            <!-- 標題 -->
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 text-white p-2 rounded-lg">
+                    <i class="fa-solid fa-calendar-check text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-800 text-base leading-tight">招標日曆系統</h1>
+                    <p class="text-xs text-slate-400">Hong Kong Tender Calendar</p>
+                </div>
+            </div>
+
+            <!-- 關鍵字搜尋 -->
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
+                <input type="text" id="search-input" oninput="renderCalendar()" placeholder="搜尋招標名稱或部門..." 
+                       class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+            </div>
+
+            <!-- 產業分類選擇 -->
+            <div>
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">招標產業分類</h2>
+                    <button onclick="toggleAllCategories(true)" class="text-[11px] text-blue-600 hover:underline">全選</button>
+                </div>
+                <div id="category-filters" class="space-y-2 text-xs">
+                    <!-- 由 JS 動態渲染分類 Checkbox -->
+                </div>
+            </div>
+
+            <!-- 狀態過濾 -->
+            <div>
+                <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">招標狀態</h2>
+                <div class="space-y-2 text-xs">
+                    <label class="flex items-center gap-2 cursor-pointer text-slate-700">
+                        <input type="checkbox" value="招標中" checked onchange="renderCalendar()" class="status-checkbox rounded text-blue-600">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> 招標中
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer text-slate-700">
+                        <input type="checkbox" value="截標中" checked onchange="renderCalendar()" class="status-checkbox rounded text-blue-600">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span> 即將截標
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer text-slate-700">
+                        <input type="checkbox" value="已開標" checked onchange="renderCalendar()" class="status-checkbox rounded text-blue-600">
+                        <span class="w-2 h-2 rounded-full bg-slate-400"></span> 已開標
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部資訊 -->
+        <div class="p-4 border-t border-slate-100 bg-slate-50 text-xs text-slate-500 flex justify-between items-center">
+            <span>當月顯示項目:</span>
+            <span id="visible-count" class="font-bold text-blue-600">0 項</span>
+        </div>
+    </aside>
+
+    <!-- 📅 右側主要日曆區 -->
+    <main class="flex-1 flex flex-col bg-white overflow-hidden">
+        
+        <!-- 頂部導航控制欄 -->
+        <header class="p-4 border-b border-slate-200 flex items-center justify-between bg-white shadow-sm">
+            <div class="flex items-center gap-3">
+                <button onclick="changeMonth(-1)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <h2 id="current-month-display" class="text-lg font-bold text-slate-800 w-36 text-center">2026年 8月</h2>
+                <button onclick="changeMonth(1)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+                <button onclick="goToToday()" class="px-3 py-1.5 border border-slate-200 hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700 transition ml-2">
+                    回到今天
+                </button>
+            </div>
+
+            <!-- 月份快速切換選單 -->
+            <div class="flex items-center gap-2">
+                <select id="year-select" onchange="jumpToDate()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-700 font-semibold focus:outline-none focus:border-blue-500">
+                    <option value="2026">2026 年</option>
+                </select>
+                <select id="month-select" onchange="jumpToDate()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-700 font-semibold focus:outline-none focus:border-blue-500">
+                    <option value="0">1 月</option>
+                    <option value="1">2 月</option>
+                    <option value="2">3 月</option>
+                    <option value="3">4 月</option>
+                    <option value="4">5 月</option>
+                    <option value="5">6 月</option>
+                    <option value="6">7 月</option>
+                    <option value="7" selected>8 月</option>
+                    <option value="8">9 月</option>
+                    <option value="9">10 月</option>
+                    <option value="10">11 月</option>
+                    <option value="11">12 月</option>
+                </select>
+            </div>
+        </header>
+
+        <!-- 星期標頭 -->
+        <div class="calendar-grid bg-slate-50 border-b border-slate-200 text-center py-2 text-xs font-bold text-slate-500">
+            <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+        </div>
+
+        <!-- 日曆網格區 -->
+        <div id="calendar-body" class="calendar-grid flex-1 overflow-y-auto bg-slate-200 gap-[1px]">
+            <!-- 由 JS 動態渲染天數與招標標籤 -->
+        </div>
+    </main>
+
+    <!-- 🔍 招標詳情 Modal -->
+    <div id="detail-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-[450px] space-y-4">
+            <div class="flex justify-between items-start">
+                <span id="modal-category" class="px-2.5 py-1 text-xs font-bold rounded text-white bg-blue-600">分類</span>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <h3 id="modal-title" class="text-base font-bold text-slate-800">招標名稱</h3>
+            <div class="bg-slate-50 p-4 rounded-lg space-y-2 text-xs">
+                <div class="flex justify-between"><span class="text-slate-500">招標編號：</span><span id="modal-id" class="font-mono text-slate-800 font-bold">--</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">發佈部門：</span><span id="modal-dept" class="text-slate-800">--</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">截標日期：</span><span id="modal-date" class="text-slate-800">--</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">預估預算：</span><span id="modal-budget" class="text-emerald-600 font-bold">--</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">目前狀態：</span><span id="modal-status" class="font-bold text-blue-600">--</span></div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tenderData = { categories: [], tenders: [] };
+        let currentDate = new Date(2026, 7, 1); // 預設 2026 年 8 月
+
+        // 載入 tenders.json
+        fetch('./tenders.json')
+            .then(res => res.json())
+            .then(data => {
+                tenderData = data;
+                initCategoryFilters();
+                renderCalendar();
+            })
+            .catch(err => console.error("Data load failed:", err));
+
+        function initCategoryFilters() {
+            const container = document.getElementById('category-filters');
+            container.innerHTML = tenderData.categories.map(cat => `
+                <label class="flex items-center gap-2 cursor-pointer text-slate-700 hover:text-slate-900">
+                    <input type="checkbox" value="${cat.id}" checked onchange="renderCalendar()" class="category-checkbox rounded text-blue-600">
+                    <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${cat.color}"></span>
+                    <span>${cat.name}</span>
+                </label>
+            `).join('');
+        }
+
+        function toggleAllCategories(checked) {
+            document.querySelectorAll('.category-checkbox').forEach(cb => cb.checked = checked);
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            // 更新頂部顯示
+            document.getElementById('current-month-display').innerText = `${year}年 ${month + 1}月`;
+            document.getElementById('year-select').value = year;
+            document.getElementById('month-select').value = month;
+
+            // 取得選中的分類與狀態
+            const selectedCats = Array.from(document.querySelectorAll('.category-checkbox:checked')).map(cb => cb.value);
+            const selectedStatuses = Array.from(document.querySelectorAll('.status-checkbox:checked')).map(cb => cb.value);
+            const searchKeyword = document.getElementById('search-input').value.toLowerCase().trim();
+
+            // 過濾當月招標項目
+            const filteredTenders = tenderData.tenders.filter(t => {
+                const matchCategory = selectedCats.includes(t.category);
+                const matchStatus = selectedStatuses.includes(t.status);
+                const matchKeyword = t.title.toLowerCase().includes(searchKeyword) || t.department.toLowerCase().includes(searchKeyword);
+                return matchCategory && matchStatus && matchKeyword;
+            });
+
+            document.getElementById('visible-count').innerText = `${filteredTenders.length} 項`;
+
+            // 計算月曆天數
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const prevMonthDays = new Date(year, month, 0).getDate();
+
+            const calendarBody = document.getElementById('calendar-body');
+            calendarBody.innerHTML = '';
+
+            // 1. 上個月的填補天數
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const dayNum = prevMonthDays - i;
+                calendarBody.innerHTML += `<div class="day-cell bg-slate-50/50 p-2 text-slate-300 text-xs">${dayNum}</div>`;
+            }
+
+            // 2. 當月天數與招標項目
+            const today = new Date();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const isToday = (year === today.getFullYear() && month === today.getMonth() && day === today.getDate());
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                // 找出當天的招標
+                const dayTenders = filteredTenders.filter(t => t.date === dateStr);
+
+                let tagsHtml = dayTenders.map(t => `
+                    <div onclick="openModal('${t.id}')" class="tender-tag text-white" style="background-color: ${t.color}">
+                        ${t.title}
+                    </div>
+                `).join('');
+
+                calendarBody.innerHTML += `
+                    <div class="day-cell bg-white p-1.5 flex flex-col justify-start border-t border-slate-100 ${isToday ? 'bg-amber-50/60 ring-2 ring-amber-400 inset-0' : ''}">
+                        <div class="flex justify-between items-center mb-1 px-1">
+                            <span class="text-xs font-bold ${isToday ? 'text-amber-600' : 'text-slate-600'}">${day}</span>
+                            ${dayTenders.length > 0 ? `<span class="text-[10px] bg-slate-100 text-slate-500 rounded px-1">${dayTenders.length}</span>` : ''}
+                        </div>
+                        <div class="overflow-y-auto max-h-[85px] space-y-1">
+                            ${tagsHtml}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 3. 下個月的填補天數
+            const totalCells = firstDay + daysInMonth;
+            const nextDays = (7 - (totalCells % 7)) % 7;
+            for (let day = 1; day <= nextDays; day++) {
+                calendarBody.innerHTML += `<div class="day-cell bg-slate-50/50 p-2 text-slate-300 text-xs">${day}</div>`;
+            }
+        }
+
+        function changeMonth(delta) {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        function jumpToDate() {
+            const y = parseInt(document.getElementById('year-select').value);
+            const m = parseInt(document.getElementById('month-select').value);
+            currentDate = new Date(y, m, 1);
+            renderCalendar();
+        }
+
+        function goToToday() {
+            currentDate = new Date();
+            renderCalendar();
+        }
+
+        function openModal(id) {
+            const item = tenderData.tenders.find(t => t.id === id);
+            if (!item) return;
+
+            document.getElementById('modal-title').innerText = item.title;
+            document.getElementById('modal-id').innerText = item.id;
+            document.getElementById('modal-dept').innerText = item.department;
+            document.getElementById('modal-date').innerText = item.date;
+            document.getElementById('modal-budget').innerText = item.budget;
+            document.getElementById('modal-status').innerText = item.status;
+            
+            const catBadge = document.getElementById('modal-category');
+            catBadge.innerText = item.category_name;
+            catBadge.style.backgroundColor = item.color;
+
+            document.getElementById('detail-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
+'''
+
+with open("index.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+print("✅ 已成功寫入包含左側分類欄與跨月日曆功能的 index.html！")
