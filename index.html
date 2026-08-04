@@ -6,37 +6,51 @@
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f9; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f9; color: #333; }
     
-    header { background: #fff; padding: 12px 30px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
-    header h1 { font-size: 18px; color: #333; }
+    header { background: #fff; padding: 12px 25px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    header h1 { font-size: 18px; color: #2c3e50; font-weight: 700; }
     
     /* 常用網址下拉選單區塊 */
     .quick-links { display: flex; align-items: center; gap: 10px; }
-    .quick-links select { padding: 6px 12px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; outline: none; background: #fff; }
+    .quick-links select { padding: 6px 12px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; outline: none; background: #fff; cursor: pointer; }
 
     .app-container { display: flex; height: calc(100vh - 60px); padding: 15px; gap: 15px; }
     
     /* Sidebar */
-    .sidebar { width: 340px; background: #fff; border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow-y: auto; }
-    .sidebar h2 { font-size: 15px; margin-bottom: 12px; color: #444; border-bottom: 2px solid #007bff; padding-bottom: 5px; }
-    .tender-item { padding: 10px; border-bottom: 1px solid #eee; transition: background 0.2s; cursor: pointer; }
+    .sidebar { width: 340px; background: #fff; border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow-y: auto; display: flex; flex-direction: column; }
+    .sidebar h2 { font-size: 15px; margin-bottom: 12px; color: #444; border-bottom: 2px solid #007bff; padding-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
+    .sidebar .count-badge { font-size: 12px; background: #eef5ff; color: #007bff; padding: 2px 8px; border-radius: 12px; font-weight: 600; }
+    .tender-list-container { flex: 1; overflow-y: auto; }
+    .tender-item { padding: 10px; border-bottom: 1px solid #eee; transition: background 0.2s; cursor: pointer; position: relative; }
     .tender-item:hover { background: #eef5ff; }
+    .category-pill { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-bottom: 4px; color: #fff; }
     .tender-title { font-weight: 600; color: #2c3e50; font-size: 13px; line-height: 1.4; }
     .tender-meta { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; }
     .tender-dept { color: #007bff; font-weight: 500; }
     .tender-date { color: #dc3545; font-weight: 600; }
     
     /* Main Content */
-    .main-content { flex: 1; background: #fff; border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden; }
+    .main-content { flex: 1; background: #fff; border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+    
+    /* 分類 TAB 篩選列 */
+    .filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; flex-wrap: wrap; }
+    .filter-title { font-size: 13px; font-weight: 600; color: #555; margin-right: 5px; }
+    .filter-btn { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #ddd; background: #f8f9fa; color: #555; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 5px; user-select: none; }
+    .filter-btn:hover { background: #e9ecef; }
+    .filter-btn.active { background: #2c3e50; color: #fff; border-color: #2c3e50; }
+    .filter-btn .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+    #calendar-container { flex: 1; overflow: hidden; }
     #calendar { height: 100%; }
 
     /* Modal 詳情彈窗 */
     .modal-backdrop { position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 999; }
-    .modal-box { background: #fff; width: 500px; max-width: 90%; border-radius: 8px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); position: relative; }
-    .modal-header { font-size: 16px; font-weight: bold; color: #2c3e50; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+    .modal-box { background: #fff; width: 520px; max-width: 90%; border-radius: 8px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); position: relative; }
+    .modal-header { font-size: 16px; font-weight: bold; color: #2c3e50; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; padding-right: 20px; }
     .modal-field { margin-bottom: 10px; font-size: 13px; line-height: 1.5; color: #444; }
     .modal-close { position: absolute; top: 12px; right: 15px; border: none; background: none; font-size: 18px; cursor: pointer; color: #888; }
+    .modal-close:hover { color: #000; }
   </style>
 </head>
 <body>
@@ -44,7 +58,6 @@
   <header>
     <h1>🏛️ 香港招標資訊追蹤 Dashboard</h1>
     
-    <!-- 自行擴充快捷連結 -->
     <div class="quick-links">
       <span style="font-size: 13px; color: #555; font-weight: 500;">🔗 外部招標網站：</span>
       <select onchange="if(this.value) window.open(this.value, '_blank')">
@@ -52,19 +65,27 @@
         <option value="https://pcms2.gld.gov.hk/iprod/#/sta00305?lang-setting=zh-HK">政府物流服務署 (GLD)</option>
         <option value="https://www.housingauthority.gov.hk/tc/business-counter/tenders-and-contracts/index.html">香港房屋委員會 (Housing Authority)</option>
         <option value="https://www.ha.org.hk/visitor/ha_visitor_index.asp?Content_ID=2008&Lang=CHIN">醫院管理局 (HA)</option>
-        <!-- 你未來可以直接在下面加入新的 <option> -->
       </select>
     </div>
   </header>
 
   <div class="app-container">
     <aside class="sidebar">
-      <h2>最新截標項目列表</h2>
-      <div id="tender-list">載入中...</div>
+      <h2>最新截標項目列表 <span id="item-count" class="count-badge">0 筆</span></h2>
+      <div id="tender-list" class="tender-list-container">載入中...</div>
     </aside>
 
     <main class="main-content">
-      <div id="calendar"></div>
+      <!-- 💡 分類選擇 TAB (支援多選) -->
+      <div class="filter-bar" id="filter-bar">
+        <span class="filter-title">🏷️ 類別篩選：</span>
+        <button class="filter-btn active" id="btn-all" onclick="toggleSelectAll()">全選 / 清除</button>
+        <!-- 分類按鈕動態生成 -->
+      </div>
+
+      <div id="calendar-container">
+        <div id="calendar"></div>
+      </div>
     </main>
   </div>
 
@@ -73,6 +94,7 @@
     <div class="modal-box">
       <button class="modal-close" onclick="closeModal()">✕</button>
       <div id="modal-title" class="modal-header">招標詳情</div>
+      <div class="modal-field"><strong>類別：</strong><span id="modal-cat">-</span></div>
       <div class="modal-field"><strong>招標編號：</strong><span id="modal-code">-</span></div>
       <div class="modal-field"><strong>發布部門：</strong><span id="modal-dept">-</span></div>
       <div class="modal-field"><strong>截標日期：</strong><span id="modal-date" style="color:#dc3545; font-weight:bold;">-</span></div>
@@ -81,19 +103,52 @@
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      var calendarEl = document.getElementById('calendar');
-      var listEl = document.getElementById('tender-list');
+    // 🏷️ 分類定義與色彩設定 (已加入「物流 / 運輸服務」)
+    const CATEGORIES = {
+      "IT / 資訊科技": { keywords: ["系統", "雲端", "網絡", "軟件", "電腦", "數碼", "IT", "數據"], color: "#007bff" },
+      "工程 / 保養維修": { keywords: ["工程", "保養", "維修", "電源", "測量", "地圖", "設備", "設施"], color: "#28a745" },
+      "物流 / 運輸服務": { keywords: ["物流", "運輸", "搬運", "車輛", "司機", "派送", "接載", "貨運"], color: "#f1c40f" },
+      "清潔 / 流動廁所": { keywords: ["清潔", "廁所", "潔淨", "車房", "環境"], color: "#fd7e14" },
+      "保安 / 警衛服務": { keywords: ["保安", "護衛", "警衛", "法院"], color: "#6f42c1" },
+      "物資 / 床單被單": { keywords: ["供應", "被單", "床墊", "物資", "器材", "內窺鏡"], color: "#e83e8c" },
+      "服務 / 諮詢團隊": { keywords: ["服務", "租賃", "園藝", "電話", "諮詢", "聘任", "管理"], color: "#17a2b8" },
+      "其他": { keywords: [], color: "#6c757d" }
+    };
 
-      var calendar = new FullCalendar.Calendar(calendarEl, {
+    let allTenders = [];
+    let selectedCategories = new Set(Object.keys(CATEGORIES)); // 預設全選
+    let calendar;
+
+    // 💡 自動分類邏輯
+    function autoClassify(title) {
+      for (const [cat, info] of Object.entries(CATEGORIES)) {
+        if (cat === "其他") continue;
+        for (const kw of info.keywords) {
+          if (title.includes(kw)) {
+            return cat;
+          }
+        }
+      }
+      return "其他";
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      initFilterTabs();
+
+      var calendarEl = document.getElementById('calendar');
+      calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         locale: 'zh-tw',
         headerToolbar: {
           left: 'prev,next today',
           center: 'title',
-          right: 'dayGridMonth,listMonth' // 改用 listMonth 以獲得更佳列表體驗
+          right: 'dayGridMonth,listMonth'
         },
-        events: 'data/tenders.json?v=' + new Date().getTime(),
+        events: function(info, successCallback, failureCallback) {
+          // 根據被選擇的 TAB 過濾 Events
+          const filtered = allTenders.filter(t => selectedCategories.has(t.category));
+          successCallback(filtered);
+        },
         eventClick: function(info) {
           info.jsEvent.preventDefault();
           showModal(info.event.extendedProps, info.event.title, info.event.startStr);
@@ -101,33 +156,125 @@
       });
       calendar.render();
 
-      // 載入 Sidebar
+      // 載入 JSON 資料
       fetch('data/tenders.json?v=' + new Date().getTime())
         .then(res => res.json())
         .then(data => {
-          listEl.innerHTML = '';
-          if (!data || data.length === 0) {
-            listEl.innerHTML = '<p style="color:#888;">暫無招標數據</p>';
-            return;
-          }
-          data.forEach(item => {
-            var div = document.createElement('div');
-            div.className = 'tender-item';
-            div.innerHTML = `
-              <div class="tender-title">[${item.dept || '部門'}] ${item.title}</div>
-              <div class="tender-meta">
-                <span class="tender-dept">${item.code || ''}</span>
-                <span class="tender-date">📅 ${item.date || item.start}</span>
-              </div>
-            `;
-            div.onclick = () => showModal(item, item.title, item.date || item.start);
-            listEl.appendChild(div);
+          // 對每一筆招標標題進行自動分類
+          allTenders = data.map(item => {
+            const cat = autoClassify(item.title);
+            const catInfo = CATEGORIES[cat];
+            return {
+              ...item,
+              category: cat,
+              backgroundColor: catInfo.color,
+              borderColor: catInfo.color,
+              textColor: cat === "物流 / 運輸服務" ? "#333333" : "#ffffff" // 黃色底配深色字較清晰
+            };
           });
+
+          updateDashboard();
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById('tender-list').innerHTML = '<p style="color:red;">資料載入失敗</p>';
         });
     });
 
+    // 初始化 TAB 按鈕
+    function initFilterTabs() {
+      const filterBar = document.getElementById('filter-bar');
+      
+      Object.entries(CATEGORIES).forEach(([catName, info]) => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-btn active';
+        btn.dataset.category = catName;
+        btn.innerHTML = `<span class="dot" style="background:${info.color}"></span>${catName}`;
+        btn.onclick = () => toggleCategory(catName, btn);
+        filterBar.appendChild(btn);
+      });
+    }
+
+    // 切換單個 TAB
+    function toggleCategory(catName, btn) {
+      if (selectedCategories.has(catName)) {
+        selectedCategories.delete(catName);
+        btn.classList.remove('active');
+      } else {
+        selectedCategories.add(catName);
+        btn.classList.add('active');
+      }
+      
+      updateAllBtnState();
+      updateDashboard();
+    }
+
+    // 全選 / 清除
+    function toggleSelectAll() {
+      const allBtn = document.getElementById('btn-all');
+      const catBtns = document.querySelectorAll('.filter-btn[data-category]');
+
+      if (selectedCategories.size === Object.keys(CATEGORIES).length) {
+        // 全部取消
+        selectedCategories.clear();
+        catBtns.forEach(btn => btn.classList.remove('active'));
+      } else {
+        // 全部選擇
+        selectedCategories = new Set(Object.keys(CATEGORIES));
+        catBtns.forEach(btn => btn.classList.add('active'));
+      }
+
+      updateAllBtnState();
+      updateDashboard();
+    }
+
+    function updateAllBtnState() {
+      const allBtn = document.getElementById('btn-all');
+      if (selectedCategories.size === Object.keys(CATEGORIES).length) {
+        allBtn.classList.add('active');
+      } else {
+        allBtn.classList.remove('active');
+      }
+    }
+
+    // 更新月曆與 Sidebar 列表
+    function updateDashboard() {
+      if (calendar) calendar.refetchEvents();
+
+      const listEl = document.getElementById('tender-list');
+      const countEl = document.getElementById('item-count');
+      listEl.innerHTML = '';
+
+      const filtered = allTenders.filter(t => selectedCategories.has(t.category));
+      countEl.innerText = `${filtered.length} 筆`;
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = '<p style="color:#888; text-align:center; padding-top:20px;">無符合分類之招標</p>';
+        return;
+      }
+
+      filtered.forEach(item => {
+        const catInfo = CATEGORIES[item.category];
+        const textColor = item.category === "物流 / 運輸服務" ? "#333" : "#fff";
+        var div = document.createElement('div');
+        div.className = 'tender-item';
+        div.innerHTML = `
+          <span class="category-pill" style="background:${catInfo.color}; color:${textColor}">${item.category}</span>
+          <div class="tender-title">[${item.dept || '部門'}] ${item.title}</div>
+          <div class="tender-meta">
+            <span class="tender-dept">${item.code || ''}</span>
+            <span class="tender-date">📅 ${item.date || item.start}</span>
+          </div>
+        `;
+        div.onclick = () => showModal(item, item.title, item.date || item.start);
+        listEl.appendChild(div);
+      });
+    }
+
     function showModal(data, title, date) {
+      const textColor = data.category === "物流 / 運輸服務" ? "#333" : "#fff";
       document.getElementById('modal-title').innerText = title;
+      document.getElementById('modal-cat').innerHTML = `<span class="category-pill" style="background:${CATEGORIES[data.category].color}; color:${textColor}">${data.category}</span>`;
       document.getElementById('modal-code').innerText = data.code || '-';
       document.getElementById('modal-dept').innerText = data.dept || '-';
       document.getElementById('modal-date').innerText = date;
