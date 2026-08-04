@@ -13,33 +13,61 @@
     
     .app-container { display: flex; height: calc(100vh - 65px); padding: 20px; gap: 20px; }
     
-    .sidebar { width: 320px; background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow-y: auto; }
+    /* Sidebar 樣式 */
+    .sidebar { width: 340px; background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow-y: auto; }
     .sidebar h2 { font-size: 16px; margin-bottom: 15px; color: #444; border-bottom: 2px solid #007bff; padding-bottom: 5px; }
-    .tender-item { padding: 12px 10px; border-bottom: 1px solid #eee; font-size: 13px; }
-    .tender-item:hover { background: #f8f9fa; cursor: pointer; }
-    .tender-title { font-weight: 600; color: #2c3e50; line-height: 1.4; }
-    .tender-date { color: #e74c3c; font-size: 12px; margin-top: 6px; font-weight: 500; }
+    .tender-item { padding: 12px 10px; border-bottom: 1px solid #eee; transition: background 0.2s; cursor: pointer; }
+    .tender-item:hover { background: #eef5ff; }
+    .tender-title { font-weight: 600; color: #2c3e50; font-size: 13px; line-height: 1.4; }
+    .tender-meta { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; }
+    .tender-dept { color: #007bff; font-weight: 500; }
+    .tender-date { color: #dc3545; font-weight: 600; }
     
+    /* Main Content */
     .main-content { flex: 1; background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden; }
     #calendar { height: 100%; }
+
+    /* 月曆內部項目樣式調整 */
+    .fc-event { cursor: pointer; padding: 2px 4px; font-size: 12px; }
+
+    /* Modal 詳情彈窗樣式 */
+    .modal-backdrop { position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 999; }
+    .modal-box { background: #fff; width: 500px; max-width: 90%; border-radius: 8px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); position: relative; }
+    .modal-header { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+    .modal-field { margin-bottom: 12px; font-size: 14px; line-height: 1.5; color: #444; }
+    .modal-field strong { color: #111; }
+    .modal-close { position: absolute; top: 15px; right: 20px; border: none; background: none; font-size: 20px; cursor: pointer; color: #888; }
+    .modal-close:hover { color: #000; }
   </style>
 </head>
 <body>
 
   <header>
     <h1>🏛️ 香港招標資訊追蹤 Dashboard</h1>
-    <span id="update-time" style="font-size: 12px; color: #666;">即時數據</span>
+    <span id="update-time" style="font-size: 12px; color: #666;">即時動態更新</span>
   </header>
 
   <div class="app-container">
     <aside class="sidebar">
-      <h2>最新截標項目</h2>
+      <h2>最新截標項目列表</h2>
       <div id="tender-list">載入中...</div>
     </aside>
 
     <main class="main-content">
       <div id="calendar"></div>
     </main>
+  </div>
+
+  <!-- 招標詳情 Modal -->
+  <div id="detail-modal" class="modal-backdrop">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div id="modal-title" class="modal-header">招標詳情</div>
+      <div class="modal-field"><strong>招標編號：</strong><span id="modal-code">-</span></div>
+      <div class="modal-field"><strong>發布部門：</strong><span id="modal-dept">-</span></div>
+      <div class="modal-field"><strong>截標日期：</strong><span id="modal-date" style="color:#dc3545; font-weight:bold;">-</span></div>
+      <div class="modal-field"><strong>內容摘要：</strong><br><div id="modal-desc" style="background:#f8f9fa; padding:10px; border-radius:5px; margin-top:5px; white-space:pre-line;">-</div></div>
+    </div>
   </div>
 
   <script>
@@ -56,52 +84,51 @@
           center: 'title',
           right: 'dayGridMonth,listWeek'
         },
-        eventSources: [{
-          url: 'data/tenders.json?v=' + new Date().getTime(), // 防快取
-          transformData: function(events) {
-            // 自動修復欄位映射
-            return events.map(e => ({
-              id: e.id,
-              title: e.title,
-              start: e.start || e.date || e.deadline,
-              url: e.url || e.link
-            }));
-          }
-        }]
+        events: 'data/tenders.json?v=' + new Date().getTime(),
+        eventClick: function(info) {
+          info.jsEvent.preventDefault();
+          showModal(info.event.extendedProps, info.event.title, info.event.startStr);
+        }
       });
       calendar.render();
 
-      // 載入 Sidebar 列表
+      // 載入 Sidebar
       fetch('data/tenders.json?v=' + new Date().getTime())
         .then(res => res.json())
         .then(data => {
           listEl.innerHTML = '';
           if (!data || data.length === 0) {
-            listEl.innerHTML = '<p style="color:#888;">暫無招標資料</p>';
+            listEl.innerHTML = '<p style="color:#888;">暫無招標數據</p>';
             return;
           }
           data.forEach(item => {
-            var itemDate = item.date || item.start || item.deadline || '未定';
             var div = document.createElement('div');
             div.className = 'tender-item';
             div.innerHTML = `
-              <div class="tender-title">${item.title}</div>
-              <div class="tender-date">📅 截標日期: ${itemDate}</div>
+              <div class="tender-title">[${item.dept || '政府部門'}] ${item.title}</div>
+              <div class="tender-meta">
+                <span class="tender-dept">${item.code || ''}</span>
+                <span class="tender-date">📅 ${item.date || item.start}</span>
+              </div>
             `;
-            div.onclick = () => {
-              if (item.url || item.link) {
-                window.open(item.url || item.link, '_blank');
-              } else {
-                alert(`項目：${item.title}\n截標日期：${itemDate}`);
-              }
-            };
+            div.onclick = () => showModal(item, item.title, item.date || item.start);
             listEl.appendChild(div);
           });
-        })
-        .catch(err => {
-          listEl.innerHTML = '<p style="color:red;">資料載入失敗</p>';
         });
     });
+
+    function showModal(data, title, date) {
+      document.getElementById('modal-title').innerText = title;
+      document.getElementById('modal-code').innerText = data.code || 'GLD-TENDER';
+      document.getElementById('modal-dept').innerText = data.dept || '香港特別行政區政府';
+      document.getElementById('modal-date').innerText = date;
+      document.getElementById('modal-desc').innerText = data.desc || '暫無詳細備註。';
+      document.getElementById('detail-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('detail-modal').style.display = 'none';
+    }
   </script>
 </body>
 </html>
