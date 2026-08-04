@@ -3,229 +3,296 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>香港招標資訊追蹤 Dashboard</title>
-  
-  <!-- 1. 引入 Tailwind CSS (樣式美化) -->
+  <title>香港招標資訊追蹤 Dashboard (Admin 增強版)</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- 2. 引入 Vue 3 (前端響應式框架) -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <!-- 3. 引入 FullCalendar (月曆套件) -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
-  
-  <style>
-    /* 調整月曆樣式以利閱讀 */
-    .fc-event { cursor: pointer; padding: 2px 4px; font-size: 0.85em; }
-  </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
   <div id="app" class="max-w-7xl mx-auto p-4 sm:p-6">
     
-    <!-- 頁頭資訊 -->
-    <header class="flex justify-between items-center mb-6 bg-white p-4 rounded-lg shadow">
+    <!-- 頁頭資訊與頁籤切換 -->
+    <header class="flex flex-wrap justify-between items-center mb-6 bg-white p-4 rounded-lg shadow gap-4">
       <div>
         <h1 class="text-2xl font-bold text-blue-900">🏛️ 香港招標資訊追蹤 Dashboard</h1>
         <p class="text-xs text-gray-500 mt-1">最後更新時間：{{ lastUpdated }}</p>
       </div>
-      <!-- 視圖切換按鈕 -->
       <div class="space-x-2">
-        <button @click="currentView = 'calendar'" 
-                :class="currentView === 'calendar' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
-                class="px-4 py-2 rounded font-medium text-sm transition">
-          📅 月曆檢視 (截標日程)
-        </button>
-        <button @click="currentView = 'search'" 
-                :class="currentView === 'search' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
-                class="px-4 py-2 rounded font-medium text-sm transition">
-          🔍 歷史與搜尋
-        </button>
+        <button @click="currentView = 'calendar'" :class="currentView === 'calendar' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'" class="px-3 py-2 rounded text-sm font-medium">📅 月曆</button>
+        <button @click="currentView = 'search'" :class="currentView === 'search' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'" class="px-3 py-2 rounded text-sm font-medium">🔍 搜尋/中標歷史</button>
+        <button @click="currentView = 'admin'" :class="currentView === 'admin' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'" class="px-3 py-2 rounded text-sm font-medium">🔐 Admin 控制台</button>
       </div>
     </header>
 
-    <!-- 頂部通用篩選器 (Control Panel) -->
-    <section class="bg-white p-4 rounded-lg shadow mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div>
-        <label class="block text-xs font-bold text-gray-600 mb-1">主題類別</label>
-        <select v-model="selectedCategory" class="w-full border rounded p-2 text-sm bg-gray-50">
-          <option value="ALL">全部主題 (工程/人力/物流/物料/IT)</option>
-          <option value="工程">工程</option>
-          <option value="人力">人力</option>
-          <option value="物流">物流</option>
-          <option value="物料供應">物料供應</option>
-          <option value="IT及科技">IT及科技</option>
-        </select>
-      </div>
-
-      <div>
-        <label class="block text-xs font-bold text-gray-600 mb-1">機構類型</label>
-        <select v-model="selectedOrgType" class="w-full border rounded p-2 text-sm bg-gray-50">
-          <option value="ALL">全部機構 (政府/大學/社福/私人)</option>
-          <option value="政府部門">政府部門</option>
-          <option value="學術機構">學術機構</option>
-          <option value="社福機構">社福機構</option>
-          <option value="私人公司">私人公司</option>
-        </select>
-      </div>
-
-      <div v-if="currentView === 'search'">
-        <label class="block text-xs font-bold text-gray-600 mb-1">關鍵字搜尋 (標題/編號/中標公司)</label>
-        <input v-model="searchKeyword" type="text" placeholder="輸入搜尋關鍵字..." class="w-full border rounded p-2 text-sm bg-gray-50">
-      </div>
-    </section>
-
-    <!-- 視圖 1: 月曆形式 (FullCalendar) -->
+    <!-- 視圖 1: 月曆形式 -->
     <div v-show="currentView === 'calendar'" class="bg-white p-4 rounded-lg shadow">
       <div id="calendar"></div>
     </div>
 
-    <!-- 視圖 2: 歷史招標與搜尋表格 -->
-    <div v-show="currentView === 'search'" class="bg-white rounded-lg shadow overflow-hidden">
+    <!-- 視圖 2: 歷史搜尋與數據表格 -->
+    <div v-show="currentView === 'search'" class="bg-white rounded-lg shadow p-4">
+      <input v-model="searchKeyword" type="text" placeholder="搜尋標題/編號/中標公司..." class="w-full border rounded p-2 mb-4 text-sm bg-gray-50">
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm border-collapse">
-          <thead class="bg-gray-100 border-b text-gray-600">
+          <thead class="bg-gray-100 border-b">
             <tr>
-              <th class="p-3">招標編號</th>
-              <th class="p-3">主題 / 機構類型</th>
+              <th class="p-3">編號</th>
+              <th class="p-3">主題 / 機構</th>
               <th class="p-3">招標項目名稱</th>
-              <th class="p-3">發佈機構</th>
               <th class="p-3">截標日期</th>
               <th class="p-3">中標公司 / 金額</th>
-              <th class="p-3">連結</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="item in filteredTenders" :key="item.tender_ref" class="border-b hover:bg-gray-50">
-              <td class="p-3 font-mono font-bold text-blue-800">{{ item.tender_ref }}</td>
-              <td class="p-3">
-                <span class="inline-block px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded mr-1">{{ item.category }}</span>
-                <span class="inline-block px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">{{ item.org_type }}</span>
-              </td>
-              <td class="p-3 font-medium">{{ item.title }}</td>
-              <td class="p-3 text-gray-600">{{ item.organization_name }}</td>
+              <td class="p-3 font-mono font-bold">{{ item.tender_ref }}</td>
+              <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">{{ item.category }}</span></td>
+              <td class="p-3">{{ item.title }}</td>
               <td class="p-3 text-red-600 font-semibold">{{ item.close_date }}</td>
               <td class="p-3">
-                <div v-if="item.winner_name" class="text-xs">
-                  <span class="font-bold text-green-700">{{ item.winner_name }}</span><br>
-                  <span class="text-gray-500">HK$ {{ Number(item.award_amount).toLocaleString() }}</span>
-                </div>
-                <span v-else class="text-gray-400 text-xs">尚未公佈 / 招標中</span>
+                <span v-if="item.winner_name" class="text-green-700 font-bold">{{ item.winner_name }} (HK$ {{ item.award_amount }})</span>
+                <span v-else class="text-gray-400">進行中 / 尚未公佈</span>
               </td>
-              <td class="p-3">
-                <a :href="item.original_url" target="_blank" class="text-blue-500 hover:underline text-xs">前往網頁</a>
-              </td>
-            </tr>
-            <tr v-if="filteredTenders.length === 0">
-              <td colspan="7" class="text-center p-8 text-gray-400">找不到符合條件的招標資料</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
+    <!-- 視圖 3: 🔐 Admin 控制台 (管理員專用) -->
+    <div v-show="currentView === 'admin'" class="bg-white p-6 rounded-lg shadow">
+      
+      <!-- 1. 未登入狀態：要求輸入 GitHub Access Token -->
+      <div v-if="!isLoggedIn" class="max-w-md mx-auto py-8">
+        <h2 class="text-xl font-bold mb-4 text-center">🔑 管理員身份驗證</h2>
+        <p class="text-xs text-gray-500 mb-4">請輸入你的 GitHub Personal Access Token (PAT) 作為管理員金鑰。</p>
+        <div class="space-y-4">
+          <input v-model="githubConfig.repoOwner" type="text" placeholder="GitHub 用戶名 (Owner)" class="w-full border rounded p-2 text-sm">
+          <input v-model="githubConfig.repoName" type="text" placeholder="Repository 名稱 (例: hk-tender)" class="w-full border rounded p-2 text-sm">
+          <input v-model="githubConfig.pat" type="password" placeholder="GitHub Access Token (ghp_...)" class="w-full border rounded p-2 text-sm">
+          <button @click="loginAdmin" class="w-full bg-purple-600 text-white py-2 rounded text-sm font-bold hover:bg-purple-700">登入控制台</button>
+        </div>
+      </div>
+
+      <!-- 2. 已登入狀態：手動新增/編輯招標中標資料 -->
+      <div v-else>
+        <div class="flex justify-between items-center mb-6 pb-4 border-b">
+          <span class="text-sm font-bold text-green-600">✅ 已成功連線至 GitHub API</span>
+          <button @click="logoutAdmin" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded">登出 Admin</button>
+        </div>
+
+        <h3 class="text-lg font-bold mb-4">手動更新招標/中標紀錄</h3>
+        
+        <!-- 管理員表單 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded mb-6 text-sm">
+          <div>
+            <label class="block font-bold mb-1">招標編號 (Ref ID)</label>
+            <input v-model="form.tender_ref" type="text" placeholder="例如: ARCH/2026/08" class="w-full border p-2 rounded">
+          </div>
+          <div>
+            <label class="block font-bold mb-1">項目名稱</label>
+            <input v-model="form.title" type="text" class="w-full border p-2 rounded">
+          </div>
+          <div>
+            <label class="block font-bold mb-1">主題類別</label>
+            <select v-model="form.category" class="w-full border p-2 rounded">
+              <option value="工程">工程</option>
+              <option value="人力">人力</option>
+              <option value="物流">物流</option>
+              <option value="物料供應">物料供應</option>
+              <option value="IT及科技">IT及科技</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold mb-1">發佈機構類型</label>
+            <select v-model="form.org_type" class="w-full border p-2 rounded">
+              <option value="政府部門">政府部門</option>
+              <option value="學術機構">學術機構</option>
+              <option value="社福機構">社福機構</option>
+              <option value="私人公司">私人公司</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold mb-1">截標日期</label>
+            <input v-model="form.close_date" type="date" class="w-full border p-2 rounded">
+          </div>
+          <div>
+            <label class="block font-bold mb-1">中標公司名稱 (若無可留空)</label>
+            <input v-model="form.winner_name" type="text" placeholder="例如: 某某工程有限公司" class="w-full border p-2 rounded">
+          </div>
+          <div>
+            <label class="block font-bold mb-1">中標金額 (HKD)</label>
+            <input v-model.number="form.award_amount" type="number" placeholder="例如: 1500000" class="w-full border p-2 rounded">
+          </div>
+          <div>
+            <label class="block font-bold mb-1">原始連結</label>
+            <input v-model="form.original_url" type="text" class="w-full border p-2 rounded">
+          </div>
+        </div>
+
+        <button @click="saveTenderToGitHub" :disabled="isSaving" class="bg-purple-600 text-white font-bold px-6 py-2 rounded text-sm hover:bg-purple-700 disabled:opacity-50">
+          {{ isSaving ? '提交至 GitHub 中...' : '💾 保存並 Commit 到 GitHub' }}
+        </button>
+      </div>
+
+    </div>
+
   </div>
 
   <script>
-    const { createApp, ref, computed, onMounted, watch } = Vue;
+    const { createApp, ref, computed, onMounted } = Vue;
 
     createApp({
       setup() {
         const rawTenders = ref([]);
-        const currentView = ref('calendar'); // 'calendar' 或 'search'
-        const selectedCategory = ref('ALL');
-        const selectedOrgType = ref('ALL');
+        const currentView = ref('calendar');
         const searchKeyword = ref('');
         const lastUpdated = ref('-');
-        let calendarInstance = null;
+        const isSaving = ref(false);
+        const isLoggedIn = ref(false);
 
-        // 1. 從相對路徑讀取 JSON 數據
+        // GitHub REST API 設定檔
+        const githubConfig = ref({
+          repoOwner: '',
+          repoName: '',
+          pat: ''
+        });
+
+        // 管理員表單欄位
+        const form = ref({
+          tender_ref: '',
+          title: '',
+          category: '工程',
+          org_type: '政府部門',
+          organization_name: '',
+          close_date: '',
+          winner_name: '',
+          award_amount: null,
+          original_url: ''
+        });
+
+        // 載入 JSON 資料
         const fetchTenderData = async () => {
           try {
-            const res = await fetch('./data/tenders.json?t=' + new Date().getTime()); // 防快取
+            const res = await fetch('./data/tenders.json?t=' + new Date().getTime());
             if (res.ok) {
               rawTenders.value = await res.json();
               lastUpdated.value = new Date().toLocaleString('zh-HK');
               initCalendar();
             }
-          } catch (err) {
-            console.error("載入 tenders.json 失敗，請確認檔案路徑是否正確。", err);
-          }
+          } catch (err) { console.error(err); }
         };
 
-        // 2. 表格搜尋與動態過濾邏輯
-        const filteredTenders = computed(() => {
-          return rawTenders.value.filter(item => {
-            const matchCategory = selectedCategory.value === 'ALL' || item.category === selectedCategory.value;
-            const matchOrg = selectedOrgType.value === 'ALL' || item.org_type === selectedOrgType.value;
-            const kw = searchKeyword.value.toLowerCase();
-            const matchKeyword = !kw || 
-              item.title.toLowerCase().includes(kw) || 
-              item.tender_ref.toLowerCase().includes(kw) || 
-              (item.winner_name && item.winner_name.toLowerCase().includes(kw));
+        // 登入驗證 (儲存 PAT 到 SessionStorage)
+        const loginAdmin = () => {
+          if (!githubConfig.value.pat || !githubConfig.value.repoOwner || !githubConfig.value.repoName) {
+            alert("請完整填寫所有連線資訊！");
+            return;
+          }
+          sessionStorage.setItem('gh_admin', JSON.stringify(githubConfig.value));
+          isLoggedIn.value = true;
+        };
+
+        const logoutAdmin = () => {
+          sessionStorage.removeItem('gh_admin');
+          isLoggedIn.value = false;
+        };
+
+        // 🌟 核心功能：透過 GitHub REST API 直接將修改寫回 GitHub Repo
+        const saveTenderToGitHub = async () => {
+          if (!form.value.tender_ref || !form.value.title) {
+            alert("請至少填寫招標編號與標題！");
+            return;
+          }
+
+          isSaving.value = true;
+
+          try {
+            const { repoOwner, repoName, pat } = githubConfig.value;
+            const filePath = 'data/tenders.json';
+            const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`;
+
+            // 1. 獲取現有 tenders.json 的 SHA 值 (GitHub 更新檔案必須提供 SHA)
+            const getFileRes = await fetch(apiUrl, {
+              headers: { 'Authorization': `token ${pat}` }
+            });
+            const fileData = await getFileRes.json();
+            const fileSha = fileData.sha;
+
+            // 2. 更新資料陣列 (若編號存在則覆蓋，不存在則新增)
+            const updatedTenders = [...rawTenders.value];
+            const existingIndex = updatedTenders.findIndex(t => t.tender_ref === form.value.tender_ref);
             
-            return matchCategory && matchOrg && matchKeyword;
-          });
-        });
+            const newEntry = { ...form.value, status: form.value.winner_name ? 'AWARDED' : 'ACTIVE' };
 
-        // 3. 初始化 FullCalendar 月曆
-        const initCalendar = () => {
-          const calendarEl = document.getElementById('calendar');
-          if (!calendarEl) return;
-
-          calendarInstance = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            locale: 'zh-tw',
-            headerToolbar: {
-              left: 'prev,next today',
-              center: 'title',
-              right: 'dayGridMonth,listMonth'
-            },
-            events: getCalendarEvents(),
-            eventClick: (info) => {
-              info.jsEvent.preventDefault();
-              if (info.event.url) window.open(info.event.url, '_blank');
+            if (existingIndex >= 0) {
+              updatedTenders[existingIndex] = newEntry;
+            } else {
+              updatedTenders.push(newEntry);
             }
-          });
-          calendarInstance.render();
-        };
 
-        // 4. 將招標 JSON 格式化為 FullCalendar 要求的事件格式
-        const getCalendarEvents = () => {
-          return filteredTenders.value.map(item => {
-            // 依主題給予不同色彩標籤
-            let color = '#3b82f6'; // 預設藍色
-            if (item.category === '工程') color = '#ef4444'; // 紅色
-            if (item.category === '人力') color = '#10b981'; // 綠色
-            if (item.category === '物流') color = '#f59e0b'; // 黃色
+            // 3. 將 JSON 轉為 Base64 格式 (GitHub API 要求)
+            const contentBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(updatedTenders, null, 2))));
 
-            return {
-              title: `[${item.organization_name}] ${item.title}`,
-              start: item.close_date, // 截標日期
-              url: item.original_url,
-              backgroundColor: color,
-              borderColor: color
-            };
-          });
-        };
+            // 4. 呼叫 GitHub PUT API 進行 Commit
+            const putRes = await fetch(apiUrl, {
+              method: 'PUT',
+              headers: {
+                'Authorization': `token ${pat}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                message: `feat(admin): update tender ${form.value.tender_ref} via Web Dashboard`,
+                content: contentBase64,
+                sha: fileSha
+              })
+            });
 
-        // 監聽篩選條件變化，自動刷新月曆數據
-        watch([selectedCategory, selectedOrgType], () => {
-          if (calendarInstance) {
-            calendarInstance.removeAllEvents();
-            calendarInstance.addEventSource(getCalendarEvents());
+            if (putRes.ok) {
+              alert("🎉 成功 commit 並更新資料至 GitHub！網頁將於 1 分鐘內刷新發佈。");
+              rawTenders.value = updatedTenders; // 即時更新本地 UI
+            } else {
+              const errData = await putRes.json();
+              alert("更新失敗：" + errData.message);
+            }
+
+          } catch (err) {
+            alert("發送請求失敗: " + err.message);
+          } finally {
+            isSaving.value = false;
           }
+        };
+
+        const filteredTenders = computed(() => {
+          const kw = searchKeyword.value.toLowerCase();
+          return rawTenders.value.filter(i => !kw || i.title.toLowerCase().includes(kw) || i.tender_ref.toLowerCase().includes(kw));
         });
+
+        const initCalendar = () => {
+          const el = document.getElementById('calendar');
+          if (!el) return;
+          const calendar = new FullCalendar.Calendar(el, {
+            initialView: 'dayGridMonth',
+            events: rawTenders.value.map(i => ({ title: i.title, start: i.close_date, url: i.original_url }))
+          });
+          calendar.render();
+        };
 
         onMounted(() => {
           fetchTenderData();
+          // 自動檢查是否已有登入資訊
+          const savedAdmin = sessionStorage.getItem('gh_admin');
+          if (savedAdmin) {
+            githubConfig.value = JSON.parse(savedAdmin);
+            isLoggedIn.value = true;
+          }
         });
 
         return {
-          currentView,
-          selectedCategory,
-          selectedOrgType,
-          searchKeyword,
-          filteredTenders,
-          lastUpdated
+          rawTenders, currentView, searchKeyword, lastUpdated, isLoggedIn,
+          githubConfig, form, isSaving, filteredTenders,
+          loginAdmin, logoutAdmin, saveTenderToGitHub
         };
       }
     }).mount('#app');
