@@ -2,9 +2,8 @@ name: Auto Run Tender Scraper
 
 on:
   schedule:
-    # 每天 UTC 00:00 (香港時間 08:00) 自動執行一次
     - cron: '0 0 * * *'
-  workflow_dispatch: # 允許在 GitHub 頁面上手動觸發
+  workflow_dispatch:
 
 jobs:
   scrape-and-update:
@@ -24,14 +23,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # 關鍵步驟：安裝 Playwright 的 Chromium 瀏覽器與 Linux 系統依賴庫
     - name: Install Playwright Browsers
       run: |
         playwright install chromium --with-deps
 
     - name: Run Scraper Script
       run: |
-        python main_scraper.py
+        python scrapers/main_scraper.py
 
     - name: Commit and Push updated data
       run: |
